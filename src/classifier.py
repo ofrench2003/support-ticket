@@ -47,7 +47,7 @@ Triage this ticket. Return JSON only."""
     for attempt in range(retries):
         try:
             response = client.models.generate_content(
-                model="gemini-2.5-flash-lite",
+                model="gemini-3.1-flash-lite",
                 contents=user_msg,
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_PROMPT,
