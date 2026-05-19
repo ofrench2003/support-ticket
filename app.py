@@ -81,7 +81,7 @@ if st.button("🚀 Run Triage", type="primary"):
             (i + 1) / len(df),
             text=f"Triaging ticket {i + 1} of {len(df)}..."
         )
-        time.sleep(0.5)  # Stay comfortably under the free tier rate limit
+        time.sleep(4)  # Stay comfortably under the free tier rate limit
 
     progress.empty()
 

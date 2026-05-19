@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def load_tickets(path_or_buffer) -> pd.DataFrame:
-    df = pd.read_csv(path_or_buffer)
+    df = pd.read_csv(path_or_buffer, on_bad_lines='warn', engine='python')
 
     # Normalise column names — lowercase, strip spaces
     df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]

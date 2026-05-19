@@ -1,6 +1,9 @@
 import json
 import os
-import google.generativeai as genai
+import time
+from google import genai
+from google.genai import types
+from google.genai import errors
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -21,16 +24,12 @@ Priority rules:
 Return ONLY the JSON object. No markdown fences, no extra text."""
 
 
-def triage_ticket(ticket: dict) -> dict:
+def triage_ticket(ticket: dict, retries: int = 3, backoff: int = 10) -> dict:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise ValueError("GEMINI_API_KEY not set. Check your .env file.")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction=SYSTEM_PROMPT,
-    )
+    client = genai.Client(api_key=api_key)
 
     user_msg = f"""Ticket ID: {ticket.get('ticket_id', 'unknown')}
 Customer: {ticket.get('customer_id', 'unknown')}
@@ -45,23 +44,57 @@ Resolution notes: {ticket.get('resolution_notes', '')}
 
 Triage this ticket. Return JSON only."""
 
-    response = model.generate_content(user_msg)
-    raw = response.text.strip()
+    for attempt in range(retries):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash-lite",
+                contents=user_msg,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT,
+                ),
+            )
 
-    # Strip markdown fences if Gemini adds them anyway
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.strip()
+            raw = response.text.strip()
 
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        # One bad parse never crashes the whole run
-        return {
-            "suggested_priority": ticket.get("priority") or "Medium",
-            "suggested_category": ticket.get("category") or "Unknown",
-            "suggested_subcategory": ticket.get("subcategory") or "Unknown",
-            "explanation": f"Parse error on raw response: {raw[:150]}",
-        }
+            # Strip markdown fences if model adds them anyway
+            if raw.startswith("```"):
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
+                raw = raw.strip()
+
+            try:
+                return json.loads(raw)
+            except json.JSONDecodeError:
+                return {
+                    "suggested_priority": ticket.get("priority") or "Medium",
+                    "suggested_category": ticket.get("category") or "Unknown",
+                    "suggested_subcategory": ticket.get("subcategory") or "Unknown",
+                    "explanation": f"Parse error on raw response: {raw[:150]}",
+                }
+
+        except errors.ServerError as e:
+            # 503 — Google's servers are overloaded, wait and retry
+            if attempt < retries - 1:
+                wait = backoff * (attempt + 1)  # 10s, 20s, 30s
+                time.sleep(wait)
+            else:
+                # All retries exhausted — fall back gracefully
+                return {
+                    "suggested_priority": ticket.get("priority") or "Medium",
+                    "suggested_category": ticket.get("category") or "Unknown",
+                    "suggested_subcategory": ticket.get("subcategory") or "Unknown",
+                    "explanation": f"Service unavailable after {retries} attempts. Manual review needed.",
+                }
+
+        except errors.ClientError as e:
+            # 429 rate limit — wait longer and retry
+            if attempt < retries - 1:
+                time.sleep(30)
+            else:
+                return {
+                    "suggested_priority": ticket.get("priority") or "Medium",
+                    "suggested_category": ticket.get("category") or "Unknown",
+                    "suggested_subcategory": ticket.get("subcategory") or "Unknown",
+                    "explanation": f"Rate limit hit after {retries} attempts. Manual review needed.",
+                }
