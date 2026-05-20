@@ -8,7 +8,7 @@ load_dotenv()
 
 from src.loader import load_tickets
 from src.recurrence import flag_recurrences
-from src.classifier import triage_ticket
+from src.classifier import triage_batch
 from src.dashboard import render_dashboard
 
 st.set_page_config(
@@ -63,6 +63,10 @@ if not os.getenv("GEMINI_API_KEY"):
     st.stop()
 
 # ── Run triage ────────────────────────────────────────────────────────────────
+import time
+
+BATCH_SIZE = 10  # tickets per API call
+
 if st.button("🚀 Run Triage", type="primary"):
 
     with st.spinner("Loading and cleaning tickets..."):
@@ -72,50 +76,42 @@ if st.button("🚀 Run Triage", type="primary"):
     st.success(f"Loaded {len(df)} tickets. Running AI triage now...")
 
     progress = st.progress(0, text="Starting...")
-    results = []
+    all_results = []
 
-    for i, row in df.iterrows():
-        triage = triage_ticket(row.to_dict())
-        results.append(triage)
+    rows = df.to_dict(orient="records")
+    batches = [rows[i:i + BATCH_SIZE] for i in range(0, len(rows), BATCH_SIZE)]
+
+    for batch_num, batch in enumerate(batches):
+        batch_results = triage_batch(batch)
+        all_results.extend(batch_results)
+
         progress.progress(
-            (i + 1) / len(df),
-            text=f"Triaging ticket {i + 1} of {len(df)}..."
+            len(all_results) / len(rows),
+            text=f"Triaged {len(all_results)} of {len(rows)} tickets..."
         )
-        time.sleep(4)  # Stay comfortably under the free tier rate limit
+
+        # Only sleep between batches, not after the last one
+        if batch_num < len(batches) - 1:
+            time.sleep(8)
 
     progress.empty()
 
-    # Merge AI results back onto the dataframe
-    df = pd.concat(
-        [df.reset_index(drop=True), pd.DataFrame(results)],
-        axis=1,
+    if len(all_results) == 0:
+        st.error("No results came back from the API. Check your classifier.")
+        st.stop()
+
+    # Merge results back — match on ticket_id to be safe
+    results_df = pd.DataFrame(all_results)
+    df = df.merge(
+        results_df[["ticket_id", "suggested_priority", "suggested_category",
+                    "suggested_subcategory", "explanation"]],
+        on="ticket_id",
+        how="left",
     )
 
-    st.success("✅ Triage complete!")
+    results_df = pd.DataFrame(all_results)
 
-    # Dashboard
-    render_dashboard(df)
-
-    st.divider()
-
-    # Per-ticket results
-    st.header("🎫 Per-Ticket Results")
-    show_cols = [
-        "ticket_id", "customer_id", "date_submitted",
-        "suggested_priority", "suggested_category", "suggested_subcategory",
-        "is_recurrence", "prior_ticket_ids", "explanation",
-        "status", "ticket_description",
-    ]
-    st.dataframe(
-        df[[c for c in show_cols if c in df.columns]],
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    # Download
-    st.download_button(
-        label="⬇️ Download enriched CSV",
-        data=df.to_csv(index=False).encode("utf-8"),
-        file_name="triage_results.csv",
-        mime="text/csv",
-    )
+    # Add this temporarily to debug
+    st.write("Results columns:", results_df.columns.tolist())
+    st.write("Results sample:", results_df.head())
+    st.write("All results count:", len(all_results))

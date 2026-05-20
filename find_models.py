@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("AIzaSyCnEktCajN1SzlI5OUuqyN2hlxFdU6NZ7w"))
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 print("Models available to you:\n")
 for m in client.models.list():
