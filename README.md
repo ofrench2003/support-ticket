@@ -8,17 +8,12 @@ A Streamlit app that triages support tickets using Google Gemini AI.
 git clone <your-repo>
 cd ticket
 
+#If you would like to use a venv
 python -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
 
 pip install -r requirements.txt
 ```
-
-Add your Gemini API key to `.env`:
-```
-GEMINI_API_KEY=your_key_here
-```
-
 ## Run
 
 ```bash
@@ -29,10 +24,11 @@ Open http://localhost:8501 in your browser.
 
 ## Usage
 
-1. Upload `support_tickets.csv` in the sidebar
-2. Click **Run Triage**
-3. View the dashboard and per-ticket results
-4. Download the enriched CSV
+1. Upload your CSV file of support tickets in the sidebar
+2. Enter Gemini API key provided in the email. (unable to upload onto GitHub for security reasons)
+3. Click **Run Triage**
+4. View the dashboard and per-ticket results
+5. Download the enriched CSV
 
 ## Output format
 
@@ -45,5 +41,5 @@ recurring customer hotspots, open/escalated backlog, satisfaction by priority.
 ## Why Streamlit?
 
 File upload, interactive tables, and charts with no frontend code.
-The right shape for a tool a support manager opens in a browser
+The right shape for a tool, a support manager opens in a browser
 first thing each morning.
