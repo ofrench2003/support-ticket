@@ -92,7 +92,7 @@ if st.button("🚀 Run Triage", type="primary"):
 
         # Only sleep between batches, not after the last one
         if batch_num < len(batches) - 1:
-            time.sleep(8)
+            time.sleep(4)
 
     progress.empty()
 
@@ -108,10 +108,34 @@ if st.button("🚀 Run Triage", type="primary"):
         on="ticket_id",
         how="left",
     )
+    # Remove the debug lines and replace with:
+    st.success("✅ Triage complete!")
 
-    results_df = pd.DataFrame(all_results)
+    try:
+        render_dashboard(df)
+    except Exception as e:
+        st.error(f"Dashboard error: {e}")
 
-    # Add this temporarily to debug
-    st.write("Results columns:", results_df.columns.tolist())
-    st.write("Results sample:", results_df.head())
-    st.write("All results count:", len(all_results))
+    st.divider()
+
+    # Per-ticket results
+    st.header("🎫 Per-Ticket Results")
+    show_cols = [
+        "ticket_id", "customer_id", "date_submitted",
+        "suggested_priority", "suggested_category", "suggested_subcategory",
+        "is_recurrence", "prior_ticket_ids", "explanation",
+        "status", "ticket_description",
+    ]
+    st.dataframe(
+        df[[c for c in show_cols if c in df.columns]],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    # Download
+    st.download_button(
+        label="⬇️ Download enriched CSV",
+        data=df.to_csv(index=False).encode("utf-8"),
+        file_name="triage_results.csv",
+        mime="text/csv",
+    )
