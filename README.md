@@ -1,5 +1,8 @@
 # TICKET — AI Support Triage Assistant
 
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ofrench-support-ticket.streamlit.app/)
+If you click the link above, enter the password `uinsure2026`
+
 A Streamlit app that triages support tickets using Google Gemini AI.
 
 ## Setup
