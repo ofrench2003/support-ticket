@@ -38,18 +38,18 @@ recurrence flag, prior ticket IDs, and a plain-English explanation.
 **Dashboard:** KPI tiles, volume by category, priority breakdown,
 recurring customer hotspots, open/escalated backlog, satisfaction by priority.
 
-## Sample Run
+# Sample Run
 
 Imported the `support_tickets.csv` into the program.
 
-# Dashboard
+## Dashboard
 ![Dashboard](screenshots/dashboard.png)
 
-# Ticket results
+## Ticket results
 ![Dashboard](screenshots/results.png)
 
 ## Why Streamlit?
 
-File upload, interactive tables, and charts with no frontend code.
-The right shape for a tool, a support manager opens in a browser
-first thing each morning.
+A simple tool that allows for a cleaner-looking front end for the user, with minimal coding.
+It also adds a lot of versatility when it comes to displaying data in different ways, such as tables, graphs, and more.
+I have used it in this project mainly for this reason, but also due to my previous experience in using it.
