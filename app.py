@@ -17,6 +17,20 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Password protection ───────────────────────────────────────────────────────
+password_placeholder = st.empty()
+warning_placeholder = st.empty()
+
+password = password_placeholder.text_input("Enter access password", type="password")
+
+if password != "uinsure2026":
+    warning_placeholder.warning("Enter the password to access the app.")
+    st.stop()
+else:
+    # Clear both elements once correct password is entered
+    password_placeholder.empty()
+    warning_placeholder.empty()
+
 st.title("🎫 TICKET — AI Support Triage Assistant")
 st.caption(
     "Upload a CSV of support tickets and get AI-powered triage in seconds."
