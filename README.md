@@ -38,6 +38,16 @@ recurrence flag, prior ticket IDs, and a plain-English explanation.
 **Dashboard:** KPI tiles, volume by category, priority breakdown,
 recurring customer hotspots, open/escalated backlog, satisfaction by priority.
 
+## Sample Run
+
+Imported the `support_tickets.csv` into the program.
+
+# Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+# Ticket results
+![Dashboard](screenshots/results.png)
+
 ## Why Streamlit?
 
 File upload, interactive tables, and charts with no frontend code.
