@@ -26,7 +26,7 @@ Open http://localhost:8501 in your browser.
 
 1. Upload your CSV file of support tickets in the sidebar
 2. Enter Gemini API key provided in the email. (unable to upload onto GitHub for security reasons)
-3. Click **Run Triage**
+3. Click **Run Triage**, and wait for the AI to run through the tickets (may take longer on larger sets of data)
 4. View the dashboard and per-ticket results
 5. Download the enriched CSV
 
